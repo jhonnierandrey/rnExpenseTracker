@@ -61,7 +61,6 @@ const App = () => {
           'expensetracker_expenses',
         );
         setExpenses(expensesStorage ? JSON.parse(expensesStorage) : undefined);
-        console.log(expensesStorage);
       } catch (error) {
         console.log(error);
       }
