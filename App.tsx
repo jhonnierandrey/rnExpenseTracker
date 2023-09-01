@@ -1,117 +1,271 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
-  useColorScheme,
   View,
+  Alert,
+  Pressable,
+  Image,
+  Modal,
 } from 'react-native';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import {ExpenseType} from './src/types';
+
 import {
-  Colors,
-  DebugInstructions,
   Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+  NewBudget,
+  BudgetControl,
+  ExpenseForm,
+  ListExpenses,
+  Filter,
+} from './src/components';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+import {generateId} from './src/helpers';
 
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+const App = () => {
+  const [isValidBudget, setIsValidBudget] = useState(false);
+  const [budget, setBudget] = useState('0');
+  const [expenses, setExpenses] = useState<ExpenseType[] | []>([]);
+  const [modal, setModal] = useState(false);
+  const [expense, setExpense] = useState<ExpenseType | undefined>(undefined);
+  const [filterBy, setFilterBy] = useState('');
+  const [filteredExpenses, setFilteredExpenses] = useState<ExpenseType[] | []>(
+    [],
   );
-}
 
-function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  useEffect(() => {
+    const getSavedBudgetFromStorage = async () => {
+      try {
+        const budgetStorage =
+          (await AsyncStorage.getItem('expensetracker_budget')) ?? '0';
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+        if (Number(budgetStorage) > 0) {
+          setBudget(budgetStorage);
+          setIsValidBudget(true);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    getSavedBudgetFromStorage();
+  }, []);
+
+  useEffect(() => {
+    const getSavedExpensesFromStorage = async () => {
+      try {
+        const expensesStorage = await AsyncStorage.getItem(
+          'expensetracker_expenses',
+        );
+        setExpenses(expensesStorage ? JSON.parse(expensesStorage) : undefined);
+        console.log(expensesStorage);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    getSavedExpensesFromStorage();
+  }, []);
+
+  useEffect(() => {
+    if (isValidBudget) {
+      const saveBudgetToStorage = async () => {
+        try {
+          await AsyncStorage.setItem('expensetracker_budget', budget);
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      saveBudgetToStorage();
+    }
+  }, [isValidBudget]);
+
+  useEffect(() => {
+    const saveExpensesToStorage = async () => {
+      try {
+        await AsyncStorage.setItem(
+          'expensetracker_expenses',
+          JSON.stringify(expenses),
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    saveExpensesToStorage();
+  }, [expenses]);
+
+  useEffect(() => {
+    if (filterBy === '') {
+      setFilteredExpenses(expenses);
+    } else {
+      const newFilteredExpenses = expenses.filter(
+        expenseFilter => expenseFilter.category === filterBy,
+      );
+
+      setFilteredExpenses(newFilteredExpenses);
+    }
+  }, [expenses, filterBy]);
+
+  const handleNewBudget = (budget: string) => {
+    if (Number(budget) > 0) {
+      setIsValidBudget(true);
+    } else {
+      Alert.alert('Error', 'Budget cannot be $0');
+    }
+  };
+
+  const handleExpense = (expense: ExpenseType) => {
+    if ([expense.name, expense.category, expense.amount].includes('')) {
+      Alert.alert('Error', 'All fields are required');
+      return;
+    }
+
+    if (expense?.id) {
+      const expensesUpdated = expenses.map(expenseState =>
+        expenseState.id === expense.id ? expense : expenseState,
+      );
+
+      setExpenses(expensesUpdated);
+    } else {
+      expense.id = generateId();
+      expense.date = Date.now();
+      setExpenses([...expenses, expense]);
+    }
+    setModal(!modal);
+  };
+
+  const deleteExpense = (id: string | undefined) => {
+    if (id) {
+      Alert.alert(
+        'Do you want to delete this expense?',
+        'Deleted expenses cannot be recovered',
+        [
+          {text: 'No', style: 'cancel'},
+          {
+            text: 'Yes, Delete',
+            onPress: () => {
+              const updatedExpenses = expenses.filter(
+                expenseItem => expenseItem.id !== id,
+              );
+
+              setExpenses(updatedExpenses);
+              setModal(!modal);
+              setExpense(undefined);
+            },
+          },
+        ],
+      );
+    }
+  };
+
+  const resetApp = () => {
+    Alert.alert(
+      'Do you want to reset the app?',
+      'This will remove budget and expenses',
+      [
+        {text: 'No', style: 'cancel'},
+        {
+          text: 'Yes, Delete',
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+              setIsValidBudget(false);
+              setBudget('0');
+              setExpenses([]);
+            } catch (error) {
+              console.log(error);
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+    <View style={styles.container}>
+      <StatusBar barStyle={'dark-content'} />
+      <ScrollView>
+        <View style={styles.header}>
+          <Header />
+          {isValidBudget ? (
+            <BudgetControl
+              budget={budget}
+              expenses={expenses}
+              resetApp={resetApp}
+            />
+          ) : (
+            <NewBudget
+              handleNewBudget={handleNewBudget}
+              setBudget={setBudget}
+              budget={budget}
+            />
+          )}
         </View>
+
+        {isValidBudget && (
+          <>
+            <Filter filterBy={filterBy} setFilterBy={setFilterBy} />
+            <ListExpenses
+              expenses={filteredExpenses}
+              setModal={setModal}
+              setExpense={setExpense}
+              filterBy={filterBy}
+            />
+          </>
+        )}
       </ScrollView>
-    </SafeAreaView>
+
+      {modal && (
+        <Modal
+          animationType="slide"
+          visible={modal}
+          onRequestClose={() => {
+            setModal(!modal);
+          }}>
+          <ExpenseForm
+            setModal={setModal}
+            handleExpense={handleExpense}
+            setExpense={setExpense}
+            expense={expense}
+            deleteExpense={deleteExpense}
+          />
+        </Modal>
+      )}
+      {isValidBudget && (
+        <Pressable style={styles.pressable} onPress={() => setModal(!modal)}>
+          <Image
+            style={styles.image}
+            source={require('./src/assets/img/nuevo-gasto.png')}
+          />
+        </Pressable>
+      )}
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    backgroundColor: '#f5f5f5',
+    flex: 1,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  header: {
+    backgroundColor: '#3B82F6',
+    minHeight: 400,
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  pressable: {
+    width: 60,
+    height: 60,
+    position: 'absolute',
+    bottom: 40,
+    right: 30,
   },
-  highlight: {
-    fontWeight: '700',
+  image: {
+    width: 60,
+    height: 60,
   },
 });
 
