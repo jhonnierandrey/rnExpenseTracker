@@ -4,7 +4,7 @@ Made with React Native + TypeScript to handle expenses using Async Storage.
 
 As seen in [React Native - Crea aplicaciones para Android y iOS c/ React by Juan Pablo De la torre Valdez](https://www.udemy.com/course/react-native-crea-aplicaciones-para-android-y-ios-con-react/) TypeScript by personal preference.
 
-![Expense Tracker](https://github.com/jhonnierandrey/rnVetAppt/blob/main/src/assets/vetapp-preview.png?raw=true)
+![Expense Tracker](https://www.jaesmadeit.com/assets/img/projects/mobile-apps/expensetracker-preview.png)
 
 ## How to use:
 
