@@ -61,9 +61,7 @@ const ExpenseForm = ({
           <Pressable
             style={[styles.btn, styles.btnDelete]}
             onLongPress={() => {
-              // setModal(false);
-              // setExpense(undefined);
-              deleteExpense(id);
+              id && deleteExpense(id);
             }}>
             <Text style={styles.btnText}>Delete</Text>
           </Pressable>
@@ -71,7 +69,7 @@ const ExpenseForm = ({
       </View>
       <View style={styles.form}>
         <Text style={styles.title}>
-          {expense?.name ? 'Edit' : 'New'} expense
+          {expense?.name ? 'Edit' : 'New'} Expense
         </Text>
 
         <View style={styles.field}>
@@ -115,7 +113,7 @@ const ExpenseForm = ({
           style={styles.btnSubmit}
           onPress={() => handleExpense({name, amount, category, id, date})}>
           <Text style={styles.btnSubmitText}>
-            {expense?.name ? 'Save' : 'Add'} expense
+            {expense?.name ? 'Save' : 'Add'} Expense
           </Text>
         </Pressable>
       </View>

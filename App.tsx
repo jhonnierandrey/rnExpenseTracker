@@ -6,7 +6,6 @@ import {
   View,
   Alert,
   Pressable,
-  Image,
   Modal,
 } from 'react-native';
 
@@ -21,6 +20,7 @@ import {
   ExpenseForm,
   ListExpenses,
   Filter,
+  IconContainer,
 } from './src/components';
 
 import {generateId} from './src/helpers';
@@ -236,10 +236,7 @@ const App = () => {
       )}
       {isValidBudget && (
         <Pressable style={styles.pressable} onPress={() => setModal(!modal)}>
-          <Image
-            style={styles.image}
-            source={require('./src/assets/img/nuevo-gasto.png')}
-          />
+          <IconContainer name="add" />
         </Pressable>
       )}
     </View>

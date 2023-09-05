@@ -1,7 +1,8 @@
 import React from 'react';
-import {View, Text, StyleSheet, Image, Pressable} from 'react-native';
+import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {globalStyles} from '../assets/styles';
 import {currencyFormatter, dateFormatter} from '../helpers';
+import IconContainer from './IconContainer';
 
 import {ExpenseType} from '../types';
 
@@ -9,16 +10,6 @@ type ExpenseItemProps = {
   expense: ExpenseType;
   setModal: React.Dispatch<React.SetStateAction<boolean>>;
   setExpense: React.Dispatch<React.SetStateAction<ExpenseType | undefined>>;
-};
-
-const dictionaryIcons = {
-  investment: require('../assets/img/icono_ahorro.png'),
-  food: require('../assets/img/icono_comida.png'),
-  home: require('../assets/img/icono_casa.png'),
-  miscellaneous: require('../assets/img/icono_gastos.png'),
-  fun: require('../assets/img/icono_ocio.png'),
-  health: require('../assets/img/icono_salud.png'),
-  subscriptions: require('../assets/img/icono_suscripciones.png'),
 };
 
 const ExpenseItem = ({expense, setModal, setExpense}: ExpenseItemProps) => {
@@ -34,7 +25,7 @@ const ExpenseItem = ({expense, setModal, setExpense}: ExpenseItemProps) => {
       <View style={styles.container}>
         <View style={styles.content}>
           <View style={styles.imgContainer}>
-            <Image style={styles.image} source={dictionaryIcons[category]} />
+            <IconContainer name={category} />
             <View style={styles.textContainer}>
               <Text style={styles.category}>{category}</Text>
               <Text style={styles.name}>{name}</Text>
